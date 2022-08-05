@@ -1,3 +1,7 @@
+/**
+ *Submitted for verification at BscScan.com on 2022-08-04
+*/
+
 // $$\   $$\             $$\      $$$$$$\  $$$$$$$$\                              
 // $$$\  $$ |            $$ |    $$  __$$\ $$  _____|                             
 // $$$$\ $$ |$$\   $$\ $$$$$$\   \__/  $$ |$$ |      $$$$$$\   $$$$$$\  $$$$$$$\  
@@ -175,7 +179,7 @@ abstract contract ERC20Detailed is IERC20 {
 interface IDEXRouter {
     function factory() external pure returns (address);
 
-    function weth() external pure returns (address);
+    function WETH() external pure returns (address);
 
     function addLiquidity(
         address tokenA,
@@ -285,16 +289,16 @@ contract Nut2Earn is ERC20Detailed, Ownable {
     // Nut2Earn Settings
     uint256 private constant MAX_REBASE_FREQUENCY = 1800;
     uint256 public nutRebase = 4000; // APY: 69% APY
-    uint256 public nutRebaseDenominator = 100000000;
-    uint256 public maxSellTransactionAmount = 1000000 * 10 ** 18;  // Default Max sell per transaction is 1% of total supply
+    uint256 public nutRebaseDenominator = 1000000;
+    uint256 public maxSellTransactionAmount = 10000 * 10 ** 18;  // Default Max sell per transaction is 1% of total supply
     uint256 public rebaseFrequency = 1800;
-    uint256 public nextRebase = 1659814200;  // Date and time (GMT): Saturday, August 6, 2022 7:30:00 PM
+    uint256 public nextRebase = 1659987000;  // Date and time (GMT): Saturday, August 8, 2022 7:30:00 PM
     bool public autoRebase = true;
 
     // $NUT Token Settings
     uint256 private constant DECIMALS = 18;
     uint256 private constant MAX_UINT256 = ~uint256(0);
-    uint256 private constant INITIAL_FRAGMENTS_SUPPLY = 100000000 * (10**DECIMALS);
+    uint256 private constant INITIAL_FRAGMENTS_SUPPLY = 1000000 * (10**DECIMALS);
     uint256 private constant TOTAL_GONS = MAX_UINT256 - (MAX_UINT256 % INITIAL_FRAGMENTS_SUPPLY);
     uint256 private constant MAX_SUPPLY = 200000000 * (10**DECIMALS);
     bool public liquifyAll = false;
@@ -321,16 +325,16 @@ contract Nut2Earn is ERC20Detailed, Ownable {
     // Transaction Tax Fees Settings 
     mapping(address => bool) isFeeExempt;
     uint256 public constant MAX_FEE_RATE = 25;
-    uint256 public constant feeDenominator = 100; 
+    uint256 public constant FEE_DENOMINATOR = 100; 
 
     // Default Fee Receivers Settings
     address public yieldtoptreasuryReceiver = 0xdd7d29eb51Dd00eAc9e445F7D6f52b654fC235F0;
     address public nuttreasuryreservesReceiver = 0xF0B821A558246aFCa77140B8746354Efac65368C;
     address public nutliquidityReceiver = 0x5f045F69C73322cDC49b50d6Aa5BB5d783302E8e;
     address public nutfirepitReceiver = 0x8421d1560140ad03449df4A66338a7b26Aa380C5;
-    address public constant BusdToken = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
-    address public constant DeadWalletAddress = 0x000000000000000000000000000000000000dEaD;
-    address public constant ZeroWalletAddress = 0x0000000000000000000000000000000000000000;
+    address public constant BUSD_TOKEN = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
+    address public constant DEAD_WALLET_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+    address public constant ZERO_WALLET_ADDRESS = 0x0000000000000000000000000000000000000000;
 
     // Referral System
     mapping(address => address) public downlineLookupUpline;
@@ -375,15 +379,13 @@ contract Nut2Earn is ERC20Detailed, Ownable {
         return downLines[sender];
     }
 	
-    function addReferralFee(address receiver, uint256 amount) public {
+    function addReferralFee(address receiver, uint256 amount) private {
         referralTotalFeeReceived[receiver] += amount;
     }
 
     function getReferralTotalFee(address receiver) external view returns (uint256){
         return referralTotalFeeReceived[receiver];
     }
-
-
 
     // $NUT LP Settings
     bool public isLiquidityInBnb = true;
@@ -414,17 +416,19 @@ contract Nut2Earn is ERC20Detailed, Ownable {
         _;
     }
 
+
+
     uint256 private _totalSupply;
     uint256 private _gonsPerFragment;
-    uint256 private constant _gonSwapThreshold = TOTAL_GONS / 10000;
+    uint256 private constant GON_SWAP_THRESHOLD = TOTAL_GONS / 10000;
 
     mapping(address => uint256) private _gonBalances;
     mapping(address => mapping(address => uint256)) private _allowedFragments;
 
     constructor() ERC20Detailed("Nut2Earn", "NUT", uint8(DECIMALS)) {
         router = IDEXRouter(0x10ED43C718714eb63d5aA57B78B54704E256024E);
-        pair = IDEXFactory(router.factory()).createPair(address(this), router.weth());
-        address pairBusd = IDEXFactory(router.factory()).createPair(address(this), BusdToken);
+        pair = IDEXFactory(router.factory()).createPair(address(this), router.WETH());
+        address pairBusd = IDEXFactory(router.factory()).createPair(address(this), BUSD_TOKEN);
 
         _allowedFragments[address(this)][address(router)] = uint256(-1);
         _allowedFragments[address(this)][pair] = uint256(-1);
@@ -443,9 +447,9 @@ contract Nut2Earn is ERC20Detailed, Ownable {
         isFeeExempt[address(this)] = true;
         isFeeExempt[msg.sender] = true;
 
-        IERC20(BusdToken).approve(address(router), uint256(-1));
-        IERC20(BusdToken).approve(address(pairBusd), uint256(-1));
-        IERC20(BusdToken).approve(address(this), uint256(-1));
+        IERC20(BUSD_TOKEN).approve(address(router), uint256(-1));
+        IERC20(BUSD_TOKEN).approve(address(pairBusd), uint256(-1));
+        IERC20(BUSD_TOKEN).approve(address(this), uint256(-1));
 
         emit Transfer(address(0x0), msg.sender, _totalSupply);
     }
@@ -477,7 +481,7 @@ contract Nut2Earn is ERC20Detailed, Ownable {
     }
 
     function checkSwapThreshold() external view returns (uint256) {
-        return _gonSwapThreshold.div(_gonsPerFragment);
+        return GON_SWAP_THRESHOLD.div(_gonsPerFragment);
     }
 
     function shouldRebase() internal view returns (bool) {
@@ -497,11 +501,11 @@ contract Nut2Earn is ERC20Detailed, Ownable {
         !automatedMarketMakerPairs[msg.sender] &&
         !inSwap && 
         totalBuyFee.add(totalSellFee) > 0 &&
-        _gonBalances[address(this)] >= _gonSwapThreshold;
+        _gonBalances[address(this)] >= GON_SWAP_THRESHOLD;
     }
 
     function getCirculatingSupply() public view returns (uint256) {
-        return (TOTAL_GONS.sub(_gonBalances[DeadWalletAddress]).sub(_gonBalances[ZeroWalletAddress])).div(_gonsPerFragment);
+        return (TOTAL_GONS.sub(_gonBalances[DEAD_WALLET_ADDRESS]).sub(_gonBalances[ZERO_WALLET_ADDRESS])).div(_gonsPerFragment);
     }
 
     function getLiquidityBacking(uint256 accuracy) public view returns (uint256){
@@ -607,11 +611,11 @@ contract Nut2Earn is ERC20Detailed, Ownable {
 
             emit SwapAndLiquify(half, newBalance, otherHalf);
         }else{
-            uint256 initialBalance = IERC20(BusdToken).balanceOf(address(this));
+            uint256 initialBalance = IERC20(BUSD_TOKEN).balanceOf(address(this));
 
             _swapTokensForBusd(half, address(this));
 
-            uint256 newBalance = IERC20(BusdToken).balanceOf(address(this)).sub(initialBalance);
+            uint256 newBalance = IERC20(BUSD_TOKEN).balanceOf(address(this)).sub(initialBalance);
 
             _addLiquidityBusd(otherHalf, newBalance);
 
@@ -633,7 +637,7 @@ contract Nut2Earn is ERC20Detailed, Ownable {
     function _addLiquidityBusd(uint256 tokenAmount, uint256 busdAmount) private {
         router.addLiquidity(
             address(this),
-            BusdToken,
+            BUSD_TOKEN,
             tokenAmount,
             busdAmount,
             0,
@@ -646,7 +650,7 @@ contract Nut2Earn is ERC20Detailed, Ownable {
     function _swapTokensForBNB(uint256 tokenAmount, address receiver) private {
         address[] memory path = new address[](2);
         path[0] = address(this);
-        path[1] = router.weth();
+        path[1] = router.WETH();
 
         router.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
@@ -660,8 +664,8 @@ contract Nut2Earn is ERC20Detailed, Ownable {
     function _swapTokensForBusd(uint256 tokenAmount, address receiver) private {
         address[] memory path = new address[](3);
         path[0] = address(this);
-        path[1] = router.weth();
-        path[2] = BusdToken;
+        path[1] = router.WETH();
+        path[2] = BUSD_TOKEN;
 
         router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
             tokenAmount,
@@ -682,8 +686,8 @@ contract Nut2Earn is ERC20Detailed, Ownable {
         uint256 amountToTreasury = _gonBalances[address(this)].sub(amountToLiquify).sub(amountToYieldTop).sub(amountToFirepit).div(_gonsPerFragment);
         uint256 contractTokenBalance = _gonBalances[address(this)].div(_gonsPerFragment);
 
-        if(!liquifyAll && contractTokenBalance > _gonSwapThreshold.div(_gonsPerFragment)){
-        	contractTokenBalance = _gonSwapThreshold.div(_gonsPerFragment);
+        if(!liquifyAll && contractTokenBalance > GON_SWAP_THRESHOLD.div(_gonsPerFragment)){
+        	contractTokenBalance = GON_SWAP_THRESHOLD.div(_gonsPerFragment);
         }
     
         if(amountToLiquify > 0){
@@ -710,15 +714,15 @@ contract Nut2Earn is ERC20Detailed, Ownable {
 
         if(automatedMarketMakerPairs[recipient]) setrealFee = totalSellFee;
 
-        uint256 feeAmount = gonAmount.mul(setrealFee).div(feeDenominator);
+        uint256 feeAmount = gonAmount.mul(setrealFee).div(FEE_DENOMINATOR);
 
         // referrals
         if (automatedMarketMakerPairs[sender]) {
             address UplineAddressBuyer = getUpline(recipient);
             if (UplineAddressBuyer != address(0))
             {
-                uint256 _uplineBuyerReward = gonAmount.mul(referrer).div(feeDenominator);
-                feeAmount = gonAmount.mul(setrealFee - referee).div(feeDenominator);
+                uint256 _uplineBuyerReward = gonAmount.mul(referrer).div(FEE_DENOMINATOR);
+                feeAmount = gonAmount.mul(setrealFee - referee).div(FEE_DENOMINATOR);
                 _gonBalances[UplineAddressBuyer] = _gonBalances[UplineAddressBuyer].add(
                 _uplineBuyerReward
                 );
@@ -730,8 +734,8 @@ contract Nut2Earn is ERC20Detailed, Ownable {
 
             if (UplineAddress != address(0))
             {
-                uint256 _uplineReward = gonAmount.mul(referrer).div(feeDenominator);
-                feeAmount = gonAmount.mul(setrealFee - referee).div(feeDenominator);
+                uint256 _uplineReward = gonAmount.mul(referrer).div(FEE_DENOMINATOR);
+                feeAmount = gonAmount.mul(setrealFee - referee).div(FEE_DENOMINATOR);
                 _gonBalances[UplineAddress] = _gonBalances[UplineAddress].add(
                     _uplineReward
                 );
@@ -884,7 +888,7 @@ contract Nut2Earn is ERC20Detailed, Ownable {
         buytreasuryFee = setbuytreasuryFee;
         buyfirepitfee = setbuyfirepitFee;
         totalBuyFee = buyliquidityFee.add(buytreasuryFee).add(buyyieldFee).add(buyfirepitfee);
-        require(totalBuyFee <= feeDenominator / 4);
+        require(totalBuyFee <= FEE_DENOMINATOR / 4);
         emit SetBuyFees(buyliquidityFee, buyyieldFee, buytreasuryFee, buyfirepitfee, totalBuyFee);
     }
 
@@ -896,7 +900,7 @@ contract Nut2Earn is ERC20Detailed, Ownable {
         sellyieldFee = setsellyieldFee;
         selltreasuryFee = setselltreasuryFee;
         totalSellFee = sellliquidityFee.add(sellyieldFee).add(selltreasuryFee).add(sellfirepitfee);
-        require(totalSellFee <= feeDenominator / 4);
+        require(totalSellFee <= FEE_DENOMINATOR / 4);
         emit SetSellFees(sellfirepitfee, sellliquidityFee, sellyieldFee, selltreasuryFee, totalSellFee);
     }
 
@@ -941,12 +945,12 @@ contract Nut2Earn is ERC20Detailed, Ownable {
 
     // Set the max sell transaction - must be above the minimum amount
     function setMaxSellTransaction(uint256 maxTxn) external onlyOwner {
-        require(maxTxn >= (100000 * (10 ** 18)), "The max sell amount should be above the minimum amount");
+        require(maxTxn >= (10000 * (10 ** 18)), "The max sell amount should be above the minimum amount");
         maxSellTransactionAmount = maxTxn;
 
          emit SetMaxSellTransaction(maxSellTransactionAmount);
     }
-    
+
     event SetTargetLiquidity(uint256 targetLiquidity, uint256 targetLiquidityDenominator);
     event SetReferralSettings(uint256 referee, uint256 referrer, uint256 totalReferralFee);
     event SetBuyFees(uint256 buyliquidityFee, uint256 buyyieldFee, uint256 buytreasuryFee, uint256 buyfirepitfee, uint256 totalBuyFee);
