@@ -12,7 +12,9 @@ Here you will find all the information you need about $NUT.<br>
 - - Avalanche | AVAX<br>
 - - Fantom | FTM<br>
 - - Polygon | MATIC<br>
-$NUT is natively on the BSC and is available on other chains thanks to our partnership and integration with MultiChain.org 
+
+$NUT is natively on the BSC and is available on other chains
+<br>thanks to our partnership and integration with MultiChain.org 
 
 ### For More Information About $NUT:
 - https://linktr.ee/nut2earn <br>
