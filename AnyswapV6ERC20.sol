@@ -210,12 +210,13 @@ contract AnyswapV6ERC20 is IAnyswapV3ERC20 {
 
     // primary controller of the token contract
     address public vault;
+    
+    // MultiChain routers
+    address public constant FTM_ROUTER = 0xb576C9403f39829565BD6051695E2AC7Ecf850E2;
+    address public constant MATIC_ROUTER = 0x6fF0609046A38D76Bd40C5863b4D1a2dCe687f73;
+    address public constant ETH_ROUTER = 0x765277EebeCA2e31912C9946eAe1021199B39C61;
+    address public constant AVAX_ROUTER = 0xe5CF1558A1470cb5C166c2e8651eD0F3c5fb8F42;
 
-    address public pendingMinter;
-    uint public delayMinter;
-
-    address public pendingVault;
-    uint public delayVault;
 
     modifier onlyAuth() {
         require(isMinter[msg.sender], "AnyswapV4ERC20: FORBIDDEN");
@@ -232,9 +233,6 @@ contract AnyswapV6ERC20 is IAnyswapV3ERC20 {
     }
 
     function mpc() public view returns (address) {
-        if (block.timestamp >= delayVault) {
-            return pendingVault;
-        }
         return vault;
     }
 
@@ -245,34 +243,20 @@ contract AnyswapV6ERC20 is IAnyswapV3ERC20 {
     function initVault(address _vault) external onlyVault {
         require(_init);
         vault = _vault;
-        pendingVault = _vault;
         isMinter[_vault] = true;
         minters.push(_vault);
-        delayVault = block.timestamp;
         _init = false;
     }
 
     function setVault(address _vault) external onlyVault {
         require(_vault != address(0), "AnyswapV3ERC20: address(0x0)");
-        pendingVault = _vault;
-        delayVault = block.timestamp + delay;
-    }
-
-    function applyVault() external onlyVault {
-        require(block.timestamp >= delayVault);
-        vault = pendingVault;
+        vault = _vault;
     }
 
     function setMinter(address _auth) external onlyVault {
         require(_auth != address(0), "AnyswapV3ERC20: address(0x0)");
-        pendingMinter = _auth;
-        delayMinter = block.timestamp + delay;
-    }
-
-    function applyMinter() external onlyVault {
-        require(block.timestamp >= delayMinter);
-        isMinter[pendingMinter] = true;
-        minters.push(pendingMinter);
+        isMinter[_auth] = true;
+        minters.push(_auth);
     }
 
     // No time delay revoke minter emergency function
@@ -287,8 +271,7 @@ contract AnyswapV6ERC20 is IAnyswapV3ERC20 {
     function changeVault(address newVault) external onlyVault returns (bool) {
         require(newVault != address(0), "AnyswapV3ERC20: address(0x0)");
         vault = newVault;
-        pendingVault = newVault;
-        emit LogChangeVault(vault, pendingVault, block.timestamp);
+        emit LogChangeVault(vault, newVault, block.timestamp);
         return true;
     }
 
@@ -345,12 +328,13 @@ contract AnyswapV6ERC20 is IAnyswapV3ERC20 {
         // Use init to allow for CREATE2 accross all chains
         _init = true;
 
+        // Apply MultiChain Minter During Constructor Initiation To Avoid Additional Gas Fees & Save Time
+        isMinter[FTM_ROUTER] = true;
+        minters.push(FTM_ROUTER);
+
         // Disable/Enable swapout for v1 tokens vs mint/burn for v3 tokens
         _vaultOnly = false;
-
         vault = _vault;
-        pendingVault = _vault;
-        delayVault = block.timestamp;
 
         uint256 chainId;
         assembly {chainId := chainid()}
