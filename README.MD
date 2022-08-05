@@ -19,3 +19,4 @@ $NUT is natively on the BSC and is available on other chains
 ### For More Information About $NUT:
 - https://linktr.ee/nut2earn <br>
 - https://Nut2Earn.io
+- Contract Audit: https://github.com/cyberscope-io/audits/blob/main/oearn/audit.pdf
